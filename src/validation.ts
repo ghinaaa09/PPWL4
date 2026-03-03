@@ -1,39 +1,62 @@
-  import { Elysia, t } from "elysia";
-  import { openapi } from "@elysiajs/openapi";
+    import { Elysia, t } from "elysia";
+    import { openapi } from "@elysiajs/openapi";
 
-  const app = new Elysia()
-    .use(openapi())
-    .post("/request",
-      ({ body }) => {
+    const app = new Elysia()
+      .use(openapi())
+      .post("/request",
+        ({ body }) => {
+          return {
+            message: "Success",
+            data: body
+          }
+        },
+        {
+          body: t.Object({
+            name: t.String({ minLength: 3 }),
+            email: t.String({ format: "email" }),
+            age: t.Number({ minimum: 18 })
+          })
+        }
+      )
+      app.get(
+      "/ping",
+      () => {
         return {
-          message: "Success",
-          data: body
+          success: true,
+          message: "Server OK"
         }
       },
       {
-        body: t.Object({
-          name: t.String({ minLength: 3 }),
-          email: t.String({ format: "email" }),
-          age: t.Number({ minimum: 18 })
+        response: t.Object({
+          success: t.Boolean(),
+          message: t.String()
         })
       }
     )
+      
     app.get(
-    "/ping",
-    () => {
+    "/products/:id",
+    ({ params, query }) => {
       return {
         success: true,
-        message: "Server OK"
+        productId: params.id,
+        sort: query.sort
       }
     },
     {
+      params: t.Object({
+        id: t.Numeric()
+      }),
+      query: t.Object({
+        sort: t.Union([t.Literal("asc"), t.Literal("desc")])
+      }),
       response: t.Object({
         success: t.Boolean(),
-        message: t.String()
+        productId: t.Number(),
+        sort: t.String()
       })
     }
   )
-    
-    .listen(3000);
+      .listen(3000);
 
-  console.log(`🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`);
+    console.log(`🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`);
